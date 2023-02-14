@@ -1,10 +1,13 @@
 #!/bin/bash 
 
 set -euxo pipefail
-IMAGE="${TAG:-"v8-build"}"
+
+VERSION="$1" 
+shift
+
+IMAGE="${IMAGE:-"v8-build"}"
 CONTAINER="${CONTAINER:-v8-build}"
 FORCE="${FORCE:-}"
-
 
 build--base() {
 	if ! docker image inspect $IMAGE:base > /dev/null 2>&1 || [ "$FORCE" != "" ]; then
@@ -14,7 +17,7 @@ build--base() {
 
 
 build--setup() {
-	docker image rm -f $CONTAINER || true
+	docker rm -f $CONTAINER || true
 	docker run \
 		-i \
 		--name=$CONTAINER \
@@ -27,7 +30,7 @@ build--setup() {
 			# https://v8.dev/docs/embed
 			cd /root && fetch v8 && cd v8 && gclient sync 
 			cd /root/v8 && tools/dev/v8gen.py x64.release.sample
-			
+			cd /root/v8 && git checkout refs/tags/$VERSION 
 		EOF
 	docker commit $CONTAINER $IMAGE:setup
 	docker rm $CONTAINER
@@ -50,8 +53,8 @@ build--build() {
 		
 			cd /root/v8 && ninja -C out.gn/x64.release.sample v8_monolith
 			
-			cp /root/v8/out.gn/x64.release.sample/icudtl.dat /root/out
-			cp /root/v8/out.gn/x64.release.sample/obj/libv8_monolith.a /root/out
+			cp -v /root/v8/out.gn/x64.release.sample/icudtl.dat /root/out
+			cp -v /root/v8/out.gn/x64.release.sample/obj/libv8_monolith.a /root/out/libv8_monolith.$VERSION.a
 		EOF
 	docker commit $CONTAINER $IMAGE:build
 	docker rm $CONTAINER
