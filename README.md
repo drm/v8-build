@@ -21,6 +21,10 @@ more information.
 Running a successful build should render a directory named 'out' containing 
 `icudtl.dat` and `libv8_monolith.a`.
 
+## Issues? Need help?
+
+Feel free to drop me a note.
+
 ## License
 
 You are free to use this piece of software as you please, as long as you 
