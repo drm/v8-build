@@ -77,6 +77,14 @@ build--build() {
 	local root; root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 	mkdir -p "$root/out"
 
+	# Try to reuse build image
+	local image="$IMAGE:$VERSION"
+	if ! docker inspect $image >/dev/null 2>&1; then
+		image="$IMAGE:setup"
+	fi
+
+	echo "Using image '$image'"
+
 	docker image rm -f $CONTAINER || true
 	docker run \
 		-i \
@@ -84,7 +92,7 @@ build--build() {
 		--name=$CONTAINER \
 		--sig-proxy=false \
 		--entrypoint=/bin/bash \
-		$IMAGE:setup <<-EOF
+		$image <<-EOF
 			set -exuo pipefail
 
 			export PATH=/opt/depot_tools:$PATH
@@ -97,9 +105,9 @@ build--build() {
 			rm -rf /root/out/$VERSION && mkdir -p /root/out/$VERSION
 			
 			for f in $ARTIFACTS; do
-				cp -v /root/v8/out.gn/$RELEASE/\$f
+				cp -v /root/v8/out.gn/$RELEASE/\$f /root/out/$VERSION/
 			done;
-			cp -rv /root/v8/include /root/out/$VERSION/include
+			cp -rv /root/v8/include /root/out/$VERSION/
 		EOF
 	docker commit $CONTAINER $IMAGE:$VERSION
 	docker rm $CONTAINER
