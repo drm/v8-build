@@ -3,7 +3,7 @@ type: docker
 name: default
 
 steps:
-- name: backend
-  image: debian:bullseye
+- name: build
+  image: v8-build 
   commands:
-  - ./build.sh 10.9.194.14
+  - ./drone-build.sh 10.9.194.14
