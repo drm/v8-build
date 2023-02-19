@@ -1,0 +1,9 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+- name: backend
+  image: debian:bullseye
+  commands:
+  - ./build.sh 10.9.194.14
